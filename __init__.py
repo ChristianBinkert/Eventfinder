@@ -31,5 +31,5 @@ class Eventfinder(MycroftSkill):
         self.speak_dialog('sheet')
 
 def create_skill():
-    return Eventfinder()
+    return Eventfinder() 
 
