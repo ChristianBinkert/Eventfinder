@@ -22,7 +22,7 @@ from .util import (
     LocationNotFoundError,
 )
 
-
+CURRENT = "current"
 
 class EventIntent:
     _geolocation = None
