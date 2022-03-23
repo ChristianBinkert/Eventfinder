@@ -1,5 +1,6 @@
 from datetime import datetime
 from pathlib import Path
+from typing import List, Tuple
 
 from .skill.config import EventConfig
 from .skill.intent import EventIntent
@@ -30,7 +31,9 @@ class Eventfinder(MycroftSkill):
     @intent_handler(IntentBuilder('FutureEventIntent').require('Event').require('future'))
     def handle_future_event_intent(self, message):
         self.speak_dialog("weekly")
-        self._get_intent_data(message)
+        intent_data = self._get_intent_data(message)
+        self._get_event(intent_data)
+
 
     def _get_intent_data(self, message) -> EventIntent:
         """Parse the intent data from the message into data used in the skill.
@@ -51,7 +54,59 @@ class Eventfinder(MycroftSkill):
                 if not self.voc_match(intent_data.utterance, "today"):
                     intent_data.timeframe = DAILY"""
         self.log.info(intent_data)
+        self.log.info("return of _get_intent_data")
+        self.log.info(intent_data.timeframe)
+        self.log.info(intent_data.location)
         return intent_data
+
+    # removed -> WeatherReport which was not defined and broke the code
+    def _get_event(self, intent_data: EventIntent):
+        """Call the Open Weather Map One Call API to get weather information
+        Args:
+            intent_data: Parsed intent data
+        Returns:
+            An object representing the data returned by the API
+        """
+        weather = None
+        if intent_data is not None:
+            try:
+                latitude, longitude = self._determine_event_location(intent_data)
+                weather = self.weather_api.get_weather_for_coordinates(
+                    self.config_core.get("system_unit"), latitude, longitude, self.lang
+                )
+            except HTTPError as api_error:
+                self.log.exception("Weather API failure")
+                self._handle_api_error(api_error)
+            except LocationNotFoundError:
+                self.log.exception("City not found.")
+                self.speak_dialog(
+                    "location-not-found", data=dict(location=intent_data.location)
+                )
+            except Exception:
+                self.log.exception("Unexpected error retrieving weather")
+                self.speak_dialog("cant-get-forecast")
+                
+        self.log.info(intent_data)
+        return weather
+
+
+    def _determine_event_location(
+        self, intent_data: EventIntent
+    ) -> Tuple[float, float]:
+        """Determine latitude and longitude using the location data in the intent.
+        Args:
+            intent_data: Parsed intent data
+        Returns
+            latitude and longitude of the location"""
+        
+        if intent_data.location is None:
+            latitude = self.event_config.latitude
+            longitude = self.event_config.longitude
+        else:
+            latitude = intent_data.geolocation["latitude"]
+            longitude = intent_data.geolocation["longitude"]
+
+        return latitude, longitude
 
     @intent_file_handler('sheet.intent')
     def handle_sheet(self, message):
