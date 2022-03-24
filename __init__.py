@@ -4,6 +4,7 @@ from typing import List, Tuple
 
 from .skill.config import EventConfig
 from .skill.intent import EventIntent
+from .skill.api import TicketmasterApi
 
 from adapt.intent import IntentBuilder
 from mycroft import MycroftSkill, intent_file_handler, intent_handler
@@ -16,6 +17,7 @@ HOURLY = "hourly"
 
 class Eventfinder(MycroftSkill):
     def __init__(self):
+        self.ticketmaster_api = TicketmasterApi()
         MycroftSkill.__init__(self)
         self.event_config = None
 
@@ -71,7 +73,7 @@ class Eventfinder(MycroftSkill):
         if intent_data is not None:
             try:
                 latitude, longitude = self._determine_event_location(intent_data)
-                weather = self.weather_api.get_weather_for_coordinates(
+                weather = self.ticketmaster_api.get_weather_for_coordinates(
                     self.config_core.get("system_unit"), latitude, longitude, self.lang
                 )
             except HTTPError as api_error:
@@ -87,6 +89,8 @@ class Eventfinder(MycroftSkill):
                 self.speak_dialog("cant-get-forecast")
                 
         self.log.info(intent_data)
+        self.log.info("Returned weather from API instances follows right below")
+        self.log.info(weather)
         return weather
 
 
