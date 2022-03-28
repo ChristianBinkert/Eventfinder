@@ -4,7 +4,8 @@ from typing import List, Tuple
 
 from .skill.config import EventConfig
 from .skill.intent import EventIntent
-from .skill.api import TicketmasterApi
+from .skill.apii import TicketmasterApi
+from .skill.dialog import CurrentDialog
 
 from adapt.intent import IntentBuilder
 from mycroft import MycroftSkill, intent_file_handler, intent_handler
@@ -32,9 +33,35 @@ class Eventfinder(MycroftSkill):
 
     @intent_handler(IntentBuilder('FutureEventIntent').require('Event').require('future'))
     def handle_future_event_intent(self, message):
+        self._report_current_weather(message)
         self.speak_dialog("weekly")
+        #intent_data = self._get_intent_data(message)
+        #self._get_event(intent_data)
+
+    def _report_current_weather(self, message):
+        """Handles all requests for current weather conditions.
+        Args:
+            message: Message Bus event information from the intent parser
+        """
         intent_data = self._get_intent_data(message)
-        self._get_event(intent_data)
+        weather = self._get_event(intent_data)
+        self.log.info("Weather variable is not none")
+        if weather is not None:
+            dialog = CurrentDialog(intent_data, self.event_config, weather.current)
+            dialog.build_weather_dialog()
+            self._speak_weather(dialog)
+            if self.gui.connected and self.platform != MARK_II:
+                self._display_more_current_conditions(weather, weather_location)
+            dialog = CurrentDialog(intent_data, self.event_config, weather.current)
+            self._speak_weather(dialog)
+            if self.gui.connected:
+                if self.platform == MARK_II:
+                    self._display_more_current_conditions(weather, weather_location)
+                    sleep(5)
+                    self._display_hourly_forecast(weather, weather_location)
+                else:
+                    four_day_forecast = weather.daily[1:5]
+                    self._display_multi_day_forecast(four_day_forecast, intent_data)
 
 
     def _get_intent_data(self, message) -> EventIntent:
@@ -56,7 +83,7 @@ class Eventfinder(MycroftSkill):
                 if not self.voc_match(intent_data.utterance, "today"):
                     intent_data.timeframe = DAILY"""
         self.log.info(intent_data)
-        self.log.info("return of _get_intent_data")
+        self.log.info("return of _get_intent_data in init.py")
         self.log.info(intent_data.timeframe)
         self.log.info(intent_data.location)
         return intent_data
@@ -111,6 +138,13 @@ class Eventfinder(MycroftSkill):
             longitude = intent_data.geolocation["longitude"]
 
         return latitude, longitude
+
+    def _speak_weather(self, dialog):
+        """Instruct device to speak the contents of the specified dialog.
+        :param dialog: the dialog that will be spoken
+        """
+        self.log.info("Speaking dialog: " + dialog.name)
+        self.speak_dialog(dialog.name, dialog.data, wait=True)
 
     @intent_file_handler('sheet.intent')
     def handle_sheet(self, message):

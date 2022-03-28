@@ -13,6 +13,7 @@
 # limitations under the License.
 """Representations and conversions of the data returned by the weather API."""
 from datetime import timedelta
+import time
 from pathlib import Path
 from typing import List
 
@@ -120,19 +121,21 @@ class WeatherCondition:
         return condition_code
 
 
-class Weather:
+class CurrentWeather:
     """Abstract data representation of commonalities in forecast types."""
 
-    def __init__(self, weather: dict, timezone: str):
-        self.date_time = convert_to_local_datetime(weather["dt"], timezone)
-        self.feels_like = weather["feelsLike"]
+    def __init__(self, report: dict, timezone: str):
+        self.date_time = convert_to_local_datetime(int(time.time()), timezone)
+        self.event_name = report['events'][0]['name']
+        self.localDate = report['events'][0]['dates']['start']['localDate']
+        """self.feels_like = weather["feelsLike"]
         self.pressure = weather["pressure"]
         self.humidity = weather["humidity"]
         self.dew_point = weather["dewPoint"]
         self.clouds = weather["clouds"]
         self.wind_speed = int(weather["windSpeed"])
         self.wind_direction = self._determine_wind_direction(weather["windDeg"])
-        self.condition = WeatherCondition(weather["weather"][0])
+        self.condition = WeatherCondition(weather["weather"][0])"""
 
     @staticmethod
     def _determine_wind_direction(degree_direction: int):
@@ -176,19 +179,6 @@ class Weather:
         return wind_strength
 
 
-class CurrentWeather(Weather):
-    """Data representation of the current weather returned by the API"""
-
-    def __init__(self, weather: dict, timezone: str):
-        super().__init__(weather, timezone)
-        self.sunrise = convert_to_local_datetime(weather["sunrise"], timezone)
-        self.sunset = convert_to_local_datetime(weather["sunset"], timezone)
-        self.temperature = round(weather["temp"])
-        self.visibility = weather["visibility"]
-        self.low_temperature = None
-        self.high_temperature = None
-
-
 class DailyFeelsLike:
     """Data representation of a "feels like" JSON object from the API"""
 
@@ -208,25 +198,18 @@ class DailyTemperature(DailyFeelsLike):
         self.high = round(temperatures["max"])
 
 
-class DailyWeather(Weather):
+class DailyWeather:
     """Data representation of a daily forecast JSON object from the API"""
+    def __init__(self, report: dict, timezone: str):
+        self.date_time = convert_to_local_datetime(int(time.time()), timezone)
+        self.event_name = report['name']
+        self.localDate = report['dates']['start']['localDate']
 
-    def __init__(self, weather: dict, timezone: str):
-        super().__init__(weather, timezone)
-        self.sunrise = convert_to_local_datetime(weather["sunrise"], timezone)
+        """self.sunrise = convert_to_local_datetime(weather["sunrise"], timezone)
         self.sunset = convert_to_local_datetime(weather["sunset"], timezone)
         self.temperature = DailyTemperature(weather["temp"])
         self.feels_like = DailyFeelsLike(weather["feelsLike"])
-        self.chance_of_precipitation = int(weather["pop"] * 100)
-
-
-class HourlyWeather(Weather):
-    """Data representation of a hourly forecast JSON object from the API"""
-
-    def __init__(self, weather: dict, timezone: str):
-        super().__init__(weather, timezone)
-        self.temperature = round(weather["temp"])
-        self.chance_of_precipitation = int(weather["pop"] * 100)
+        self.chance_of_precipitation = int(weather["pop"] * 100)"""
 
 
 class WeatherAlert:
@@ -244,17 +227,11 @@ class WeatherReport:
     """Full representation of the data returned by the Open Weather Maps One Call API"""
 
     def __init__(self, report):
-        timezone = report["timezone"]
-        self.current = CurrentWeather(report["current"], timezone)
-        self.hourly = [HourlyWeather(hour, timezone) for hour in report["hourly"]]
-        self.daily = [DailyWeather(day, timezone) for day in report["daily"]]
+        timezone = report['_embedded']['events'][0]['dates']['timezone']
+        self.current = CurrentWeather(report["_embedded"], timezone)
+        self.daily = [DailyWeather(event, timezone) for event in report["_embedded"]['events']]
         today = self.daily[0]
-        self.current.high_temperature = today.temperature.high
-        self.current.low_temperature = today.temperature.low
-        if "alerts" in report:
-            self.alerts = [WeatherAlert(alert, timezone) for alert in report["alerts"]]
-        else:
-            self.alerts = None
+
 
     def get_weather_for_intent(self, intent_data):
         """Use the intent to determine which forecast satisfies the request.
@@ -262,9 +239,8 @@ class WeatherReport:
         Args:
             intent_data: Parsed intent data
         """
-        if intent_data.timeframe == "hourly":
-            weather = self.get_forecast_for_hour(intent_data)
-        elif intent_data.timeframe == "daily":
+
+        if intent_data.timeframe == "daily":
             weather = self.get_forecast_for_date(intent_data)
         else:
             weather = self.current
@@ -306,21 +282,6 @@ class WeatherReport:
 
         return forecast
 
-    def get_forecast_for_hour(self, intent_data):
-        """Use the intent to determine which hourly forecast(s) satisfies the request.
-
-        Args:
-            intent_data: Parsed intent data
-
-        Returns:
-            A single hour of forecast data based on the intent data
-        """
-        delta = intent_data.intent_datetime - intent_data.location_datetime
-        hour_delta = int(delta / timedelta(hours=1))
-        hour_index = hour_delta + 1
-        report = self.hourly[hour_index]
-
-        return report
 
     def get_weekend_forecast(self):
         """Use the intent to determine which daily forecast(s) satisfies the request.

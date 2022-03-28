@@ -24,7 +24,6 @@ provided, precluding us from having to do the conversions.
 """
 from mycroft.api import Api
 from .weather import WeatherReport
-api_key = "1917ATlicnE4Sc702QXsk6oFS7WlvnG3"
 
 OPEN_WEATHER_MAP_LANGUAGES = (
     "af",
@@ -78,23 +77,23 @@ OPEN_WEATHER_MAP_LANGUAGES = (
 )
 
 
-class TicketmasterApi(Api):
+class OpenWeatherMapApi(Api):
     """Use Open Weather Map's One Call API to retrieve weather information"""
 
     def __init__(self):
-        #super().__init__(path="owm")
+        super().__init__(path="owm")
         self.language = "en"
 
-    """def get_weather_for_coordinates(
-        self, measurement_system: str, latitude: float, longitude: float, lang: str
+    def get_weather_for_coordinates(
+        self, measurement_system: str, latitude: float, longitude: float
     ) -> WeatherReport:
-        """"""Issue an API call and map the return value into a weather report
+        """Issue an API call and map the return value into a weather report
 
         Args:
             measurement_system: Metric or Imperial measurement units
             latitude: the geologic latitude of the weather location
             longitude: the geologic longitude of the weather location
-        """"""
+        """
         query_parameters = dict(
             exclude="minutely",
             lang=self.language,
@@ -106,17 +105,7 @@ class TicketmasterApi(Api):
         response = self.request(api_request)
         local_weather = WeatherReport(response)
 
-        return local_weather"""
-
-    def get_weather_for_coordinates(self, measurement_system: str, latitude: float, longitude: float, lang: str
-    ) -> WeatherReport:
-        latlong = str(latitude) + "," + str(longitude)
-        url = f'https://app.ticketmaster.com/discovery/v2/events.json?latlong={latlong}&apikey={api_key}'
-        response = self.request(url)
-        #local_weather = WeatherReport(response)
-        
-        return response
-        #return local_weather
+        return local_weather
 
     def set_language_parameter(self, language_config: str):
         """
