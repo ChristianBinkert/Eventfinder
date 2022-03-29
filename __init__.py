@@ -31,10 +31,10 @@ class Eventfinder(MycroftSkill):
     def handle_eventfinder(self, message):
         self.speak_dialog('eventfinder')
 
-    @intent_handler(IntentBuilder('FutureEventIntent').require('Event').require('future'))
+    @intent_handler(IntentBuilder('FutureEventIntent').require('Event').require('future').optionally('location'))
     def handle_future_event_intent(self, message):
         self._report_current_weather(message)
-        self.speak_dialog("weekly")
+        #self.speak_dialog("weekly")
         #intent_data = self._get_intent_data(message)
         #self._get_event(intent_data)
 
@@ -48,7 +48,7 @@ class Eventfinder(MycroftSkill):
         self.log.info("Weather variable is not none")
         if weather is not None:
             dialog = CurrentDialog(intent_data, self.event_config, weather.current)
-            dialog.build_weather_dialog()
+            dialog.build_event_dialog()
             self._speak_weather(dialog)
             if self.gui.connected and self.platform != MARK_II:
                 self._display_more_current_conditions(weather, weather_location)

@@ -95,12 +95,12 @@ class CurrentDialog(WeatherDialog):
         self.weather = weather
         self.name = CURRENT
 
-    def build_weather_dialog(self):
+    def build_event_dialog(self):
         """Build the components necessary to speak current weather."""
-        self.name += "-weather"
+        self.name += "-event"
         self.data = dict(
-            condition=self.weather.event_name,
-            temperature=self.weather.localDate,
+            event_name=self.weather.event_name,
+            localDate=self.weather.localDate,
             temperature_unit=self.config.temperature_unit,
         )
         self._add_location()
