@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 from .skill.config import EventConfig
 from .skill.intent import EventIntent
-from .skill.apii import TicketmasterApi
+from .skill.api import TicketmasterApi
 from .skill.dialog import CurrentDialog
 
 from adapt.intent import IntentBuilder

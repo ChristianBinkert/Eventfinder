@@ -39,7 +39,7 @@ from mycroft.util.time import now_local
 from .config import EventConfig
 from .intent import EventIntent
 from .util import get_speakable_day_of_week, get_time_period
-from .weather import (
+from .events import (
     CURRENT,
     CurrentWeather,
     DAILY,

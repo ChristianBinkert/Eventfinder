@@ -39,20 +39,6 @@ SUNDAY = 6
 #   icon/code map is for the Mark I, which accepts a code to determine what
 #   is displayed.
 
-def get_timezone_for_request(report):
-    for event in report[:1]:
-        timezone = event.get('dates').get('timezone')
-    return timezone
-
-def get_eventname_for_request(report):
-    for event in report[:1]:
-        eventname = event.get('name')
-    return eventname
-
-def get_localdate_for_request(report):
-    for event in report[:1]:
-        localdate = event.get('dates').get('start').get('localDate')
-    return localdate
 
 class WeatherCondition:
     """Data representation of a weather conditions JSON object from the API"""
@@ -126,14 +112,14 @@ class WeatherAlert:
         self.description = alert["description"]
 
 
-class WeatherReportt:
-    """Full representation of the data returned by the Open Weather Maps One Call API"""
+class EventReport:
+    """Full representation of the data returned by the Ticketmaster API"""
 
     def __init__(self, report):
         #--------------------------------------------------------------------------------------------- here
-        timezone = get_timezone_for_request(report)
-        eventname = get_eventname_for_request(report)
-        localdate = get_localdate_for_request(report)
+        timezone = report[0]["dates"].get("timezone")
+        eventname = report[0].get("name")
+        localdate = report[0]['dates'].get('start').get('localDate')
         self.current = CurrentWeather(eventname, localdate, timezone)
         #--------------------------------------------------------------------------------------------- here
         #self.daily = [DailyWeather(event, timezone) for event in report["_embedded"]['events']]
