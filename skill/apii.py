@@ -1,5 +1,5 @@
 import requests
-from .weather import WeatherReport
+from .weatherr import WeatherReportt
 
 api_key = "1917ATlicnE4Sc702QXsk6oFS7WlvnG3"
 
@@ -31,11 +31,14 @@ class TicketmasterApi:
 
     def get_weather_for_coordinates(
         self, measurement_system: str, latitude: float, longitude: float, lang: str
-    ) -> WeatherReport:
+    ) -> WeatherReportt:
 
         latlong = str(latitude) + "," + str(longitude)
         url = f'https://app.ticketmaster.com/discovery/v2/events.json?latlong={latlong}&apikey={api_key}'
         response = requests.get(url).json()
-        local_weather = WeatherReport(response)
+        #Will transform response into list
+        response = sorted(response.get('_embedded').get('events'), key=lambda x: x.get('distance'))
+        
+        local_weather = WeatherReportt(response)
 
         return local_weather

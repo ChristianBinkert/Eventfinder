@@ -39,6 +39,20 @@ SUNDAY = 6
 #   icon/code map is for the Mark I, which accepts a code to determine what
 #   is displayed.
 
+def get_timezone_for_request(report):
+    for event in report[:1]:
+        timezone = event.get('dates').get('timezone')
+    return timezone
+
+def get_eventname_for_request(report):
+    for event in report[:1]:
+        eventname = event.get('name')
+    return eventname
+
+def get_localdate_for_request(report):
+    for event in report[:1]:
+        localdate = event.get('dates').get('start').get('localDate')
+    return localdate
 
 class WeatherCondition:
     """Data representation of a weather conditions JSON object from the API"""
@@ -53,10 +67,10 @@ class WeatherCondition:
 class CurrentWeather:
     """Abstract data representation of commonalities in forecast types."""
     #--------------------------------------------------------------------------------------------- here
-    def __init__(self, report: dict, timezone: str):
+    def __init__(self, eventname: str, localdate:str, timezone: str):
         self.date_time = convert_to_local_datetime(int(time.time()), timezone)
-        self.event_name = report['events'][0]['name']
-        self.localDate = report['events'][0]['dates']['start']['localDate']
+        self.event_name = eventname
+        self.localDate = localdate
         """self.feels_like = weather["feelsLike"]
         self.pressure = weather["pressure"]
         self.humidity = weather["humidity"]
@@ -112,16 +126,18 @@ class WeatherAlert:
         self.description = alert["description"]
 
 
-class WeatherReport:
+class WeatherReportt:
     """Full representation of the data returned by the Open Weather Maps One Call API"""
 
     def __init__(self, report):
         #--------------------------------------------------------------------------------------------- here
-        timezone = report['_embedded']['events'][0]['dates']['timezone']
-        self.current = CurrentWeather(report["_embedded"], timezone)
+        timezone = get_timezone_for_request(report)
+        eventname = get_eventname_for_request(report)
+        localdate = get_localdate_for_request(report)
+        self.current = CurrentWeather(eventname, localdate, timezone)
         #--------------------------------------------------------------------------------------------- here
-        self.daily = [DailyWeather(event, timezone) for event in report["_embedded"]['events']]
-        today = self.daily[0]
+        #self.daily = [DailyWeather(event, timezone) for event in report["_embedded"]['events']]
+        #today = self.daily[0]
 
 
     def get_weather_for_intent(self, intent_data):
