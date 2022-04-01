@@ -116,14 +116,14 @@ class EventReport:
     """Full representation of the data returned by the Ticketmaster API"""
 
     def __init__(self, report):
-        #--------------------------------------------------------------------------------------------- here
+        
         timezone = report[0]["dates"].get("timezone")
         eventname = report[0].get("name")
         localdate = report[0]['dates'].get('start').get('localDate')
         self.current = CurrentWeather(eventname, localdate, timezone)
         #--------------------------------------------------------------------------------------------- here
-        #self.daily = [DailyWeather(event, timezone) for event in report["_embedded"]['events']]
-        #today = self.daily[0]
+        self.daily = [DailyWeather(event, timezone) for event in report[:10]]
+        today = self.daily[0]
 
 
     def get_weather_for_intent(self, intent_data):

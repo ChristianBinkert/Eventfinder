@@ -8,7 +8,7 @@ class TicketmasterApi:
     def __init__(self):
         self.language = "en"
 
-    def get_weather_for_coordinates(
+    def get_event_for_coordinates(
         self, measurement_system: str, latitude: float, longitude: float, lang: str
     ) -> EventReport:
 

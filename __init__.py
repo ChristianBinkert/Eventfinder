@@ -33,35 +33,48 @@ class Eventfinder(MycroftSkill):
 
     @intent_handler(IntentBuilder('FutureEventIntent').require('Event').require('future').optionally('location'))
     def handle_future_event_intent(self, message):
-        self._report_current_weather(message)
+        self._report_current_event(message)
+
+
+    @intent_handler(IntentBuilder('RelativeDateEventIntent').optionally('query').require('Event').require('relative-month').optionally('location'))
+    def handle_relative_date_event_intent(self, message):
+        self._report_one_month_forecast(message)
+
+        #day_query = extract_datetime(message.data.get("utterance"))[0].strftime("%B %d")
+
         #self.speak_dialog("weekly")
         #intent_data = self._get_intent_data(message)
         #self._get_event(intent_data)
 
-    def _report_current_weather(self, message):
+    def _report_current_event(self, message):
         """Handles all requests for current weather conditions.
         Args:
             message: Message Bus event information from the intent parser
         """
         intent_data = self._get_intent_data(message)
-        weather = self._get_event(intent_data)
+        event = self._get_event(intent_data)
         self.log.info("Weather variable is not none")
-        if weather is not None:
-            dialog = CurrentDialog(intent_data, self.event_config, weather.current)
+        if event is not None:
+            dialog = CurrentDialog(intent_data, self.event_config, event.current)
             dialog.build_event_dialog()
-            self._speak_weather(dialog)
-            if self.gui.connected and self.platform != MARK_II:
-                self._display_more_current_conditions(weather, weather_location)
-            dialog = CurrentDialog(intent_data, self.event_config, weather.current)
-            self._speak_weather(dialog)
-            if self.gui.connected:
-                if self.platform == MARK_II:
-                    self._display_more_current_conditions(weather, weather_location)
-                    sleep(5)
-                    self._display_hourly_forecast(weather, weather_location)
-                else:
-                    four_day_forecast = weather.daily[1:5]
-                    self._display_multi_day_forecast(four_day_forecast, intent_data)
+            self._speak_event(dialog)
+            dialog = CurrentDialog(intent_data, self.event_config, event.current)
+            self._speak_event(dialog)
+
+    def _report_one_month_forecast(self, message):
+        """Handles all requests for a single day forecast.
+        Args:x
+            message: Message Bus event information from the intent parser
+        """
+        intent_data = EventIntent(message, self.lang)
+        event = self._get_event(intent_data)
+        if event is not None:
+            forecast = event.get_forecast_for_date(intent_data)
+            dialogs = self._build_forecast_dialogs([forecast], intent_data)
+            if self.platform == MARK_II:
+                self._display_one_day_mark_ii(forecast, intent_data)
+            for dialog in dialogs:
+                self._speak_weather(dialog)
 
 
     def _get_intent_data(self, message) -> EventIntent:
@@ -79,9 +92,9 @@ class Eventfinder(MycroftSkill):
         else:
             if self.voc_match(intent_data.utterance, "today"):
                 intent_data.timeframe = HOURLY
-            """elif self.voc_match(intent_data.utterance, "relative-day"):
+            elif self.voc_match(intent_data.utterance, "relative-day"):
                 if not self.voc_match(intent_data.utterance, "today"):
-                    intent_data.timeframe = DAILY"""
+                    intent_data.timeframe = DAILY
         self.log.info(intent_data)
         self.log.info("return of _get_intent_data in init.py")
         self.log.info(intent_data.timeframe)
@@ -90,21 +103,21 @@ class Eventfinder(MycroftSkill):
 
     # removed -> WeatherReport which was not defined and broke the code
     def _get_event(self, intent_data: EventIntent):
-        """Call the Open Weather Map One Call API to get weather information
+        """Call the Ticketmaster API to get event information
         Args:
             intent_data: Parsed intent data
         Returns:
             An object representing the data returned by the API
         """
-        weather = None
+        event = None
         if intent_data is not None:
             try:
                 latitude, longitude = self._determine_event_location(intent_data)
-                weather = self.ticketmaster_api.get_weather_for_coordinates(
+                event = self.ticketmaster_api.get_event_for_coordinates(
                     self.config_core.get("system_unit"), latitude, longitude, self.lang
                 )
             except HTTPError as api_error:
-                self.log.exception("Weather API failure")
+                self.log.exception("Event API failure")
                 self._handle_api_error(api_error)
             except LocationNotFoundError:
                 self.log.exception("City not found.")
@@ -112,13 +125,13 @@ class Eventfinder(MycroftSkill):
                     "location-not-found", data=dict(location=intent_data.location)
                 )
             except Exception:
-                self.log.exception("Unexpected error retrieving weather")
+                self.log.exception("Unexpected error retrieving Events")
                 self.speak_dialog("cant-get-forecast")
                 
         self.log.info(intent_data)
-        self.log.info("Returned weather from API instances follows right below")
-        self.log.info(weather)
-        return weather
+        self.log.info("Returned event from API instances follows right below")
+        self.log.info(event)
+        return event
 
 
     def _determine_event_location(
@@ -139,7 +152,7 @@ class Eventfinder(MycroftSkill):
 
         return latitude, longitude
 
-    def _speak_weather(self, dialog):
+    def _speak_event(self, dialog):
         """Instruct device to speak the contents of the specified dialog.
         :param dialog: the dialog that will be spoken
         """

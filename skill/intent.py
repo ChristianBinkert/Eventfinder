@@ -75,7 +75,7 @@ class EventIntent:
             )
             if utterance_datetime is not None:
                 delta = utterance_datetime - self.location_datetime
-                if int(delta / timedelta(days=1)) > 7:
+                if int(delta / timedelta(days=1)) > 365:
                     raise ValueError("Weather forecasts only supported up to 7 days")
                 if utterance_datetime.date() < self.location_datetime.date():
                     raise ValueError("Historical weather is not supported")
