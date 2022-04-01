@@ -40,15 +40,6 @@ SUNDAY = 6
 #   is displayed.
 
 
-class WeatherCondition:
-    """Data representation of a weather conditions JSON object from the API"""
-
-    def __init__(self, conditions: dict):
-        self.id = conditions["id"]
-        self.category = conditions["main"]
-        self.description = conditions["description"]
-        self.icon = conditions["icon"]
-
 
 class CurrentWeather:
     """Abstract data representation of commonalities in forecast types."""
@@ -67,25 +58,6 @@ class CurrentWeather:
         self.condition = WeatherCondition(weather["weather"][0])"""
 
 
-class DailyFeelsLike:
-    """Data representation of a "feels like" JSON object from the API"""
-
-    def __init__(self, temperatures: dict):
-        self.day = round(temperatures["day"])
-        self.night = round(temperatures["night"])
-        self.evening = round(temperatures["eve"])
-        self.morning = round(temperatures["morn"])
-
-
-class DailyTemperature(DailyFeelsLike):
-    """Data representation of a temperatures JSON object from the API"""
-
-    def __init__(self, temperatures: dict):
-        super().__init__(temperatures)
-        self.low = round(temperatures["min"])
-        self.high = round(temperatures["max"])
-
-
 class DailyWeather:
     """Data representation of a daily forecast JSON object from the API"""
     #--------------------------------------------------------------------------------------------- here
@@ -99,17 +71,6 @@ class DailyWeather:
         self.temperature = will thDailyTemperature(weather["temp"])
         self.feels_like = DailyFeelsLike(weather["feelsLike"])
         self.chance_of_precipitation = int(weather["pop"] * 100)"""
-
-
-class WeatherAlert:
-    """Data representation of a weather conditions JSON object from the API"""
-
-    def __init__(self, alert: dict, timezone: str):
-        self.sender = alert.get("sender_name")
-        self.event = alert["event"]
-        self.start = convert_to_local_datetime(alert["start"], timezone)
-        self.end = convert_to_local_datetime(alert["end"], timezone)
-        self.description = alert["description"]
 
 
 class EventReport:
@@ -140,11 +101,27 @@ class EventReport:
 
         return weather
 
-    def get_forecast_for_date(self, intent_data):
+    def get_forecast_for_date(self, intent_data, report):
         """Use the intent to determine which daily forecast(s) satisfies the request.
 
         Args:
-            intent_data: Parsed intent data
+            intent_data: Parsed intent data"""
+
+        starttime = intent_data.intent_datetime.date()
+
+        event_list_filtered = list(filter(lambda event: event_is_in_timespan(
+            event_time=event.get('dates').get('start').get('dateTime'),
+            time_start=time_start,
+            time_end=time_end
+        ), report))
+
+        return event_list_filtered  
+
+        """def get_forecast_for_date(self, intent_data):
+        """"""Use the intent to determine which daily forecast(s) satisfies the request.
+
+        Args:
+            intent_data: Parsed intent data"""
         """
         if intent_data.intent_datetime.date() == intent_data.location_datetime.date():
             forecast = self.daily[0]
@@ -154,7 +131,7 @@ class EventReport:
             day_index = day_delta + 1
             forecast = self.daily[day_index]
 
-        return forecast
+        return forecast"""  
 
     def get_forecast_for_multiple_days(self, days: int) -> List[DailyWeather]:
         """Use the intent to determine which daily forecast(s) satisfies the request.

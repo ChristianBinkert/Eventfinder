@@ -6,6 +6,7 @@ from .skill.config import EventConfig
 from .skill.intent import EventIntent
 from .skill.api import TicketmasterApi
 from .skill.dialog import CurrentDialog
+from .skill.events import EventReport
 
 from adapt.intent import IntentBuilder
 from mycroft import MycroftSkill, intent_file_handler, intent_handler
@@ -69,7 +70,7 @@ class Eventfinder(MycroftSkill):
         intent_data = EventIntent(message, self.lang)
         event = self._get_event(intent_data)
         if event is not None:
-            forecast = event.get_forecast_for_date(intent_data)
+            forecast = event.get_forecast_for_date(intent_data, report)
             dialogs = self._build_forecast_dialogs([forecast], intent_data)
             if self.platform == MARK_II:
                 self._display_one_day_mark_ii(forecast, intent_data)
