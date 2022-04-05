@@ -78,6 +78,7 @@ class EventReport:
 
     def __init__(self, report):
         
+        self.report = report
         timezone = report[0]["dates"].get("timezone")
         eventname = report[0].get("name")
         localdate = report[0]['dates'].get('start').get('localDate')
@@ -101,20 +102,25 @@ class EventReport:
 
         return weather
 
-    def get_forecast_for_date(self, intent_data, report):
+    def get_forecast_for_date(self, intent_data):
         """Use the intent to determine which daily forecast(s) satisfies the request.
 
         Args:
             intent_data: Parsed intent data"""
 
         starttime = intent_data.intent_datetime.date()
+        endtime = starttime:day +
+        
+        #complete json
+        #self.report
 
         event_list_filtered = list(filter(lambda event: event_is_in_timespan(
             event_time=event.get('dates').get('start').get('dateTime'),
             time_start=time_start,
             time_end=time_end
-        ), report))
+        ), self.report))
 
+        #list of events that fall into timespan
         return event_list_filtered  
 
         """def get_forecast_for_date(self, intent_data):
