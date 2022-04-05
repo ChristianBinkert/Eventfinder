@@ -1,3 +1,4 @@
+from datetime import datetime
 import requests
 from .events import EventReport
 
@@ -21,3 +22,21 @@ class TicketmasterApi:
         local_events = EventReport(response)
 
         return local_events
+
+    def get_event_for_coordinates_date(
+        self, measurement_system: str, latitude: float, longitude: float, lang: str, day_query
+    ) -> EventReport:
+
+        radius = 20
+        latlong = str(latitude) + "," + str(longitude)
+        startdatetime = str(day_query)
+        url = f'https://app.ticketmaster.com/discovery/v2/events.json?latlong={latlong}&apikey={api_key}&startDateTime={startdatetime}&radius={radius}'
+        response = requests.get(url).json()
+        #Will transform response into list
+        eventname = response['_embedded'].get('events')[0].get('name')
+        localdate = response['_embedded'].get('events')[0].get('dates').get('start').get('localDate')
+
+        localdate_datetime = datetime.strptime(localdate, '%Y-%m-%d').date()
+        speakable_localdate = localdate_datetime.strftime("%B %d, %Y")        
+
+        return eventname, speakable_localdate
