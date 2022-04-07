@@ -1,2 +1,2 @@
-The next event in {location} is {event_name} and takes place on the {localDate}.
-{event_name} in {location} will take place on the {localDate}.
+The next event in {location} is {event_name} and takes place on {localDate}.
+{event_name} in {location} will take place on {localDate}.

@@ -1,21 +1,16 @@
 
 """Representations and conversions of the data returned by the weather API."""
-from datetime import timedelta
+from datetime import datetime
 import time
 from pathlib import Path
 from typing import List
 
-from .config import MILES_PER_HOUR
 from .util import convert_to_local_datetime
 
 # Forecast timeframes
 CURRENT = "current"
 DAILY = "daily"
 HOURLY = "hourly"
-
-# Days of week
-SATURDAY = 5
-SUNDAY = 6
 
 
 
@@ -28,17 +23,6 @@ class CurrentEvents:
         self.localDate = localdate
 
 
-
-class DailyWeather:
-    """Data representation of a daily forecast JSON object from the API"""
-    #--------------------------------------------------------------------------------------------- here
-    def __init__(self, report: dict, timezone: str):
-        self.date_time = convert_to_local_datetime(int(time.time()), timezone)
-        self.event_name = report['name']
-        self.localDate = report['dates']['start']['localDate']
-
-
-
 class EventReport:
     """Full representation of the data returned by the Ticketmaster API"""
 
@@ -48,10 +32,9 @@ class EventReport:
         timezone = report[0]["dates"].get("timezone")
         eventname = report[0].get("name")
         localdate = report[0]['dates'].get('start').get('localDate')
+        localdate_datetime = datetime.strptime(localdate, '%Y-%m-%d').date()
+        localdate = localdate_datetime.strftime("%B %d, %Y")  
         self.current = CurrentEvents(eventname, localdate, timezone)
-        #--------------------------------------------------------------------------------------------- here
-        self.daily = [DailyWeather(event, timezone) for event in report[:10]]
-        today = self.daily[0]
 
 
     def get_weather_for_intent(self, intent_data):

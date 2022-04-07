@@ -4,6 +4,7 @@ Provides information about events on a specific day and location.
 ## About
 Mycroft skill that informs about events for a specific calendar date and location using information pulled from Ticketmaster.
 By default, it will tell you about events for the devices configured location that are taking place next. 
+Relative time requests like tonight, tomorrow or next week are answered by using the timezone of the detected location. 
 
 Ticketmasters API provides information on events from all around the globe up to a year in the future. 
 

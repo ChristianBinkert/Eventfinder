@@ -33,17 +33,13 @@ class Eventfinder(MycroftSkill):
         self.log.info("the skill has loaded")
         self.log.info(self.event_config.city)
 
-    @intent_file_handler('eventfinder.intent')
-    def handle_eventfinder(self, message):
-        self.speak_dialog('eventfinder')
-
-    @intent_handler(IntentBuilder('FutureEventIntent').require('Event').require('future').optionally('location'))
+    @intent_handler(IntentBuilder('FutureEventIntent').require('next').require('Event').optionally('location'))
     def handle_future_event_intent(self, message):
         self._report_current_event(message)
         self.log.info("FutureEventIntentHandled")
 
 
-    @intent_handler(IntentBuilder('RelativeDateEventIntent').optionally('query').require('Event').require('relative-month').optionally('location'))
+    @intent_handler(IntentBuilder('RelativeDateEventIntent').optionally('query').require('Event').require('relative-date').optionally('location'))
     def handle_relative_date_intent(self, message):
         day_query = extract_datetime(message.data.get("utterance"))[0].strftime("%Y-%m-%dT%H:%M:%SZ")
         speakable_day_query = extract_datetime(message.data.get("utterance"))[0].strftime("%B %d, %Y")
@@ -55,9 +51,7 @@ class Eventfinder(MycroftSkill):
             self._search(date.today().strftime("%B %d, %Y"))
 
     def _report_current_event(self, message):
-        """Handles all requests for current weather conditions.
-        Args:
-            message: Message Bus event information from the intent parser
+        """Handles all requests for current events.
         """
         intent_data = self._get_intent_data(message)
         event = self._get_event(intent_data)
@@ -66,13 +60,9 @@ class Eventfinder(MycroftSkill):
             dialog = CurrentDialog(intent_data, self.event_config, event.current)
             dialog.build_event_dialog()
             self._speak_event(dialog)
-            dialog = CurrentDialog(intent_data, self.event_config, event.current)
-            self._speak_event(dialog)
 
     def _search(self, day_query, speakable_day_query, message):
         """Handles all requests for a single day forecast.
-        Args:x
-            message: Message Bus event information from the intent parser
         """
 
         intent_data = EventIntent(message, self.lang)
@@ -88,8 +78,6 @@ class Eventfinder(MycroftSkill):
 
     def _get_intent_data(self, message) -> EventIntent:
         """Parse the intent data from the message into data used in the skill.
-        Args:
-            message: Message Bus event information from the intent parser
         Returns:
             parsed information about the intent
         """
@@ -196,10 +184,6 @@ class Eventfinder(MycroftSkill):
         """
         self.log.info("Speaking dialog: " + dialog.name)
         self.speak_dialog(dialog.name, dialog.data, wait=True)
-
-    @intent_file_handler('sheet.intent')
-    def handle_sheet(self, message):
-        self.speak_dialog('sheet')
 
 def create_skill():
     return Eventfinder() 

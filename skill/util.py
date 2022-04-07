@@ -121,7 +121,7 @@ def get_time_period(intent_datetime: datetime) -> str:
 
 
 def get_speakable_day_of_week(date_to_speak: datetime):
-    """Convert the time of the a daily weather forecast to a speakable day of week.
+    """Convert the time of the a daily event forecast to a speakable day of week.
 
     Args:
         date_to_speak: The date/time for the forecast being reported.
