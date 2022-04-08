@@ -1,3 +1,13 @@
+"""Mycroft skill for communicating event information
+
+This skill uses the Discovery API from Ticketmaster to retrieve event data from around the globe (https://developer.ticketmaster.com/products-and-docs/apis/discovery-api/v2/).
+It proxies its calls to the API through Mycroft's officially supported API,
+Selene.  The Selene API is also used to get geographical information about the
+city name provided in the request.
+"""
+
+#To DO - check args passed to API and whether they are necessart - measurement system, lang
+
 from datetime import datetime
 from pathlib import Path
 from typing import List, Tuple
@@ -23,12 +33,15 @@ HOURLY = "hourly"
 
 
 class Eventfinder(MycroftSkill):
+    """Main skill code for the event skill."""
+
     def __init__(self):
         self.ticketmaster_api = TicketmasterApi()
         MycroftSkill.__init__(self)
         self.event_config = None
 
     def initialize(self):
+        """Do these things after the skill has loaded"""
         self.event_config = EventConfig(self.config_core, self.settings)
         self.log.info("the skill has loaded")
         self.log.info(self.event_config.city)
@@ -51,8 +64,8 @@ class Eventfinder(MycroftSkill):
             self._search(date.today().strftime("%B %d, %Y"))
 
     def _report_current_event(self, message):
-        """Handles all requests for current events.
-        """
+        """Handles all requests for current events."""
+
         intent_data = self._get_intent_data(message)
         event = self._get_event(intent_data)
         self.log.info("Weather variable is not none")
@@ -63,11 +76,16 @@ class Eventfinder(MycroftSkill):
 
     def _search(self, day_query, speakable_day_query, message):
         """Handles all requests for a single day forecast.
+
+        Arguments: 
+            day_query: a string that matches the required format of Ticketmasters API
+            speakable_day_quert: a string that can be read userfriendly from Mycroft, such as "April 29, 2022"
         """
 
         intent_data = EventIntent(message, self.lang)
         eventname, speakable_localdate = self._get_event_date(intent_data, day_query)
      
+        #check wether the next returned event matches the required date
         if speakable_day_query == speakable_localdate:
             self.log.info(eventname, speakable_localdate)
             self.speak("On " + speakable_day_query + ", " + eventname + " will take place.")
@@ -78,6 +96,7 @@ class Eventfinder(MycroftSkill):
 
     def _get_intent_data(self, message) -> EventIntent:
         """Parse the intent data from the message into data used in the skill.
+
         Returns:
             parsed information about the intent
         """
@@ -98,9 +117,9 @@ class Eventfinder(MycroftSkill):
         self.log.info(intent_data.location)
         return intent_data
 
-    # removed -> WeatherReport which was not defined and broke the code
     def _get_event(self, intent_data: EventIntent):
         """Call the Ticketmaster API to get event information
+
         Args:
             intent_data: Parsed intent data
         Returns:
@@ -130,8 +149,10 @@ class Eventfinder(MycroftSkill):
 
     def _get_event_date(self, intent_data: EventIntent, day_query):
         """Call the Ticketmaster API to get event information
+        
         Args:
             intent_data: Parsed intent data
+        
         Returns:
             An object representing the data returned by the API
         """
@@ -164,8 +185,10 @@ class Eventfinder(MycroftSkill):
         self, intent_data: EventIntent
     ) -> Tuple[float, float]:
         """Determine latitude and longitude using the location data in the intent.
+        
         Args:
             intent_data: Parsed intent data
+        
         Returns
             latitude and longitude of the location"""
         
@@ -180,6 +203,7 @@ class Eventfinder(MycroftSkill):
 
     def _speak_event(self, dialog):
         """Instruct device to speak the contents of the specified dialog.
+
         :param dialog: the dialog that will be spoken
         """
         self.log.info("Speaking dialog: " + dialog.name)

@@ -18,6 +18,8 @@ Ticketmasters API provides information on events from all around the globe up to
 ### To get information about events at a specific date and location
 * "Which attractions are taking place on the {date} in {location}?"
 * "I am looking for events in {location} on the {date}."
+* "Which events are taking place on {weekday}?
+* "Which shows are taking place on {weekday} in {location}?
 
 ## Credits
 ChristianBinkert
