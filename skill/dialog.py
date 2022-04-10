@@ -18,8 +18,6 @@ from .util import get_speakable_day_of_week, get_time_period
 from .events import (
     CURRENT,
     CurrentEvents,
-    DAILY,
-    HOURLY,
 )
 
 ### Test

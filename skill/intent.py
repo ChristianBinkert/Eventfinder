@@ -1,4 +1,5 @@
 """Parse the intent into data used by the event skill."""
+
 from datetime import timedelta
 
 from mycroft.util.time import now_local

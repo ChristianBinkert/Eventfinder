@@ -1,5 +1,6 @@
 
 """Utility functions for the event skill."""
+
 from datetime import datetime, timedelta, tzinfo
 from time import time
 
