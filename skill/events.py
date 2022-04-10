@@ -1,5 +1,5 @@
 
-"""Representations and conversions of the data returned by the weather API."""
+"""Representations and conversions of the data returned by Ticketmasters API."""
 from datetime import datetime
 import time
 from pathlib import Path

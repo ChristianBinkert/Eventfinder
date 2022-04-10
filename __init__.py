@@ -6,7 +6,6 @@ Selene.  The Selene API is also used to get geographical information about the
 city name provided in the request.
 """
 
-#To DO - check args passed to API and whether they are necessart - measurement system, lang
 
 from datetime import datetime
 from pathlib import Path
@@ -68,7 +67,7 @@ class Eventfinder(MycroftSkill):
 
         intent_data = self._get_intent_data(message)
         event = self._get_event(intent_data)
-        self.log.info("Weather variable is not none")
+        self.log.info("Event variable is not none")
         if event is not None:
             dialog = CurrentDialog(intent_data, self.event_config, event.current)
             dialog.build_event_dialog()

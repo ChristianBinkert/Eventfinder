@@ -1,3 +1,12 @@
+"""Abstration of dialog building for the Eventfinder skill
+
+    Example: current-event-local
+    *Current: relates to the current timeframe
+    *event: stores the retrieved event information
+    *local: relates to the location being the devices default configuration, rather than a specific, requested location
+
+    """
+
 
 from typing import List, Tuple
 

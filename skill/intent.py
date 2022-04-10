@@ -1,4 +1,4 @@
-"""Parse the intent into data used by the weather skill."""
+"""Parse the intent into data used by the event skill."""
 from datetime import timedelta
 
 from mycroft.util.time import now_local
@@ -63,9 +63,9 @@ class EventIntent:
             if utterance_datetime is not None:
                 delta = utterance_datetime - self.location_datetime
                 if int(delta / timedelta(days=1)) > 365:
-                    raise ValueError("Weather forecasts only supported up to 7 days")
+                    raise ValueError("Event forecasts only supported up to 365 days")
                 if utterance_datetime.date() < self.location_datetime.date():
-                    raise ValueError("Historical weather is not supported")
+                    raise ValueError("Historical events are not supported")
                 self._intent_datetime = utterance_datetime
             else:
                 self._intent_datetime = self.location_datetime
